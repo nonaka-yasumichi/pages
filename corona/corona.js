@@ -14,6 +14,7 @@ var 曜日リスト = ["日","月","火","水","木","金","土"];
 var savedCustomList = null;
 var selectedKeywordList = ["陽性","PCR"];
 var colorScale = d3.scaleSequential(d3.interpolateRainbow).domain([0, 10]);
+var clickEventName = window.ontouchstart===null?"touchstart":"click";
 
 function getCsvStr(url){
 	var xhr = new XMLHttpRequest();
@@ -130,8 +131,8 @@ function customizeList(objList){
 	return retList;
 }
 function dumpList(list){
-	if(customList==null){
-		customList = savedCustomList;
+	if(list==null){
+		list = savedCustomList;
 	}
 	var ret = "";
 	for(var i=0;i<list.length;i++){
@@ -168,6 +169,14 @@ function getCalenderCellText(d,i){
 	}
 	return ret;
 }
+function onClickObj(d,i){
+	for(var i=0;i<savedCustomList.length;i++){
+		var s = savedCustomList[i];
+		s.selected = false;
+	}
+	d.selected = true;
+	refreshView();
+}
 function makeCalenderTable(customList){
 	if(customList==null){
 		customList = savedCustomList;
@@ -193,6 +202,14 @@ function makeCalenderTable(customList){
 			.enter()
 			.append("td")
 			.attr("class","dataTd")
+			.style("background",function(d){
+				if(d.selected){
+					return "navy";
+				}
+				else{
+					return "none";
+				}
+			})
 			.style("border-left",function(d,x){
 				var color = "white";
 				var width = "1px";
@@ -202,6 +219,7 @@ function makeCalenderTable(customList){
 				}
 				return color+" solid "+width;
 			})
+			.on(clickEventName,onClickObj)
 			.html(getCalenderCellText)
 		;
 	}
@@ -320,6 +338,23 @@ function makeGraph(customList){
 		.attr("cx",function(d){return dayOfWeekScale(d.dayOfWeek);})
 		.attr("cy",function(d){return valueScale(getGraphValue(d));})
 		.attr("fill",function(d){return colorScale(d.week);})
+		.on(clickEventName,onClickObj)
+		.attr("stroke",function(d){
+			if(d.selected){
+				return "yellow";
+			}
+			else{
+				return "none";
+			}
+		})
+		.attr("stroke-width",function(d){
+			if(d.selected){
+				return 4;
+			}
+			else{
+				return 0;
+			}
+		})
 		.style("visibility",function(d){
 			if(getGraphValue(d)==null){
 				return "hidden";
@@ -346,13 +381,15 @@ function makeDescription(){
 	}
 	target.html(str);
 }
+function refreshView(){
+	d3.select("#dataDiv").html(dumpList());
+	makeCalenderTable();
+	makeGraph();
+}
 function onLoadFunction(){
 	var objList = getObjListFromCsvUrl(SUMMARY_CSV_URL);
 	customList = customizeList(objList);
 	savedCustomList = customList;
-	d3.select("#dataDiv").html(dumpList(customList));
-	makeCalenderTable(customList);
-	makeGraph(customList);
+	refreshView();
 	makeDescription();
-	
 }
