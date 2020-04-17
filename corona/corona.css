@@ -1,7 +1,11 @@
 #dataDiv{
 	overflow:scroll;
 	height: 200px;
-	border: 1px black solid;
+	border: 1px white solid;
+}
+body{
+	color:white;
+	background:#202020;
 }
 table{
 	border-collapse: collapse;
@@ -10,10 +14,10 @@ table{
 }
 th{
 	text-align: center;
-	border: 1px black solid;
+	border: 1px white solid;
 }
 td{
 	text-align: left;
 	vertical-align: top;
-	border: 1px black solid;
+	border: 1px white solid;
 }
