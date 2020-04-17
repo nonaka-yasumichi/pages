@@ -62,8 +62,9 @@ function customizeObj(prevObj,obj){
 	var ret = {};
 	/* 月日変換 */
 	var dateFormatStr = obj.年 + "-" + getTwoDigit(obj.月) + "-"+getTwoDigit(obj.日)
-		+ "T00:00+0900";
+		+ "T00:00:00+0900";
 	var date = new Date(dateFormatStr);
+	ret.dateFormatStr = dateFormatStr;
 	ret.date = date;
 	ret.dayOfWeek = date.getDay();
 	ret.月日 = obj.月 + "/" + obj.日;
