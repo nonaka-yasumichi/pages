@@ -1,0 +1,19 @@
+#dataDiv{
+	overflow:scroll;
+	height: 200px;
+	border: 1px black solid;
+}
+table{
+	border-collapse: collapse;
+	border-spacing:0;
+	empty-cells:show;
+}
+th{
+	text-align: center;
+	border: 1px black solid;
+}
+td{
+	text-align: left;
+	vertical-align: top;
+	border: 1px black solid;
+}
