@@ -1,5 +1,5 @@
 /* 週次見える化 */
-var SUMMARY_CSV_URL= "https://github.com/kaz-ogiwara/covid19/raw/master/data/summary.csv";
+var SUMMARY_CSV_URL= "https://cors-anywhere.herokuapp.com/https://cors-ahttps://github.com/kaz-ogiwara/covid19/raw/master/data/summary.csv";
 
 function getCsvStr(url){
 	var xhr = new XMLHttpRequest();
