@@ -128,6 +128,7 @@ function customizeList(objList){
 		prevObj = obj;
 		prevRet = ret;
 	}
+	retList[retList.length-1].selected = true;
 	return retList;
 }
 function dumpList(list){
@@ -137,7 +138,10 @@ function dumpList(list){
 	var ret = "";
 	for(var i=0;i<list.length;i++){
 		var obj = list[i];
-		ret+=JSON.stringify(obj)+"<br>";
+		if(!obj.selected){
+			continue;
+		}
+		ret+=JSON.stringify(obj,null,"  ");
 	}
 	return ret;
 }
@@ -300,23 +304,28 @@ function makeGraph(customList){
 	borderG.selectAll(".dayOfWeekText").data(曜日リスト).enter()
 		.append("text")
 		.attr("x",function(d,i){return dayOfWeekScale(i);})
-		.attr("y",function(d,i){return 270;})
+		.attr("y",function(d,i){return 280;})
 		.attr("fill","white")
+		.attr("font-size",20)
 		.attr("text-anchor","middle")
 		.text(function(d){return d;})
 	;
 	borderG
 		.append("text")
+		.attr("class",".numLabel")
 		.attr("x",48)
 		.attr("y",30)
+		.attr("font-size",20)
 		.attr("fill","white")
 		.attr("text-anchor","end")
 		.text(maxValue)
 	;
 	borderG
 		.append("text")
+		.attr("class",".numLabel")
 		.attr("x",48)
 		.attr("y",250)
+		.attr("font-size",20)
 		.attr("fill","white")
 		.attr("text-anchor","end")
 		.text(0)
