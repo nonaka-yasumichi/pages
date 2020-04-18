@@ -371,6 +371,7 @@ function makeGraph(customList){
 			return "visible";
 		})
 	;
+	
 	pointCircle.append("title").text(function(d,i){
 		var str = "";
 		str += d.月日 + "("+d.曜日+")";
@@ -380,6 +381,17 @@ function makeGraph(customList){
 		}
 		return str;
 	});
+	var selectCircle = pointG.selectAll(".selectCircle").data(customList).enter()
+		.append("circle")
+		.attr("class","selectCircle")
+		.attr("r",20)
+		.attr("cx",function(d){return dayOfWeekScale(d.dayOfWeek);})
+		.attr("cy",function(d){return valueScale(getGraphValue(d));})
+		.attr("fill","white")
+		.style("opacity",0.001)
+		.on(clickEventName,onClickObj)
+		;
+
 }
 function makeDescription(){
 	var target = d3.select("#descSpan");
