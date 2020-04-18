@@ -3,12 +3,12 @@ var CORS_URL="https://cors-anywhere.herokuapp.com/";
 var SUMMARY_CSV_URL= "https://github.com/kaz-ogiwara/covid19/raw/master/data/summary.csv";
 var TRANS_MAP = {
 	"PCR検査陽性者":"陽性",
+	"PCR検査実施人数":"PCR",
 	"有症状者":"有症",
 	"退院した者":"退院",
 	"人工呼吸器又は集中治療室に入院している者":"重症",
 	"死亡者":"死者",
 	"死亡者（都道府県ベース）":"都道府県ベース",
-	"PCR検査実施人数":"PCR",
 };
 var 曜日リスト = ["日","月","火","水","木","金","土"];
 var savedCustomList = null;
@@ -229,9 +229,6 @@ function makeCalenderTable(customList){
 	}
 }
 
-function getGraphValue(d){
-	return d.陽性;
-}
 function makeLineList(seriesList){
 	var ret = [];
 	for(var week=0;week<seriesList.length;week++){
@@ -253,42 +250,47 @@ function makeLineList(seriesList){
 	}
 	return ret;
 }
-function makeGraph(customList){
+function makeGraph(customList,id,param){
 	if(customList==null){
 		customList = savedCustomList;
 	}
-	var maxValue = d3.max(customList,getGraphValue);
+	var maxValue = d3.max(customList,function(d){return d[param];});
+	var minValue = d3.min(customList,function(d){return d[param];});
 	var maxWeek = d3.max(customList,function(d){return d.week;});
 	colorScale = d3.scaleSequential(d3.interpolateRainbow).domain([0, maxWeek]);
 
 	var seriesList = makeSeriesList(customList);
 	var lineList = makeLineList(seriesList);
-	var target = d3.select("#graphDiv");
+	var target = d3.select("#"+id);
 	target.selectAll(".svg").data([]).exit().remove();
 	var svg = target.selectAll(".svg").data([1]).enter()
 		.append("svg")
 		.attr("class","svg")
-		.attr("width","600")
+		.style("overflow","visible")
+		.attr("width","650")
 		.attr("height","300")
 	;
 	var borderG = svg.append("g").attr("id","borderG");
 	var lineG = svg.append("g").attr("id","lineG");
 	var pointG = svg.append("g").attr("id","pointG");
-	var borders = [
-		[50,0,50,250],
-		[50,250,550,250],
-		[550,0,550,250],
-	];
+	var left = 80;
+	var right = 590;
 	var dayOfWeekScale = d3.scaleLinear()
 		.domain([0,6])
-		.range([100,500])
+		.range([left+30,right-30])
 	;
 	var valueScale = d3.scaleLinear()
-		.domain([0,maxValue])
+		.domain([minValue,maxValue])
 		.range([250,30])
 	;
-	console.log("maxValue:"+maxValue+", valueScale(100)="+valueScale(100));
-	console.log("maxValue:"+maxValue+", valueScale(500)="+valueScale(500));
+	var borders = [
+		[left,0,left,250],
+		[left,250,right,250],
+		[right,0,right,250],
+	];
+	if(minValue!=0){
+		borders.push([left,valueScale(0),right,valueScale(0)]);
+	}
 	
 	for(var i=0;i<borders.length;i++){
 		var b = borders[i];
@@ -313,7 +315,7 @@ function makeGraph(customList){
 	borderG
 		.append("text")
 		.attr("class",".numLabel")
-		.attr("x",48)
+		.attr("x",left-2)
 		.attr("y",30)
 		.attr("font-size",20)
 		.attr("fill","white")
@@ -323,20 +325,32 @@ function makeGraph(customList){
 	borderG
 		.append("text")
 		.attr("class",".numLabel")
-		.attr("x",48)
-		.attr("y",250)
+		.attr("x",left-2)
+		.attr("y",valueScale(0))
 		.attr("font-size",20)
 		.attr("fill","white")
 		.attr("text-anchor","end")
 		.text(0)
 	;
+	if(minValue!=0){
+		borderG
+			.append("text")
+			.attr("class",".numLabel")
+			.attr("x",left-2)
+			.attr("y",250)
+			.attr("font-size",20)
+			.attr("fill","white")
+			.attr("text-anchor","end")
+			.text(minValue)
+		;
+	}
 	lineG.selectAll(".line").data(lineList).enter()
 		.append("line")
 		.attr("class","line")
 		.attr("x1",function(d){return dayOfWeekScale(d.src.dayOfWeek);})
-		.attr("y1",function(d){return valueScale(getGraphValue(d.src));})
+		.attr("y1",function(d){return valueScale(d.src[param]);})
 		.attr("x2",function(d){return dayOfWeekScale(d.dst.dayOfWeek);})
-		.attr("y2",function(d){return valueScale(getGraphValue(d.dst));})
+		.attr("y2",function(d){return valueScale(d.dst[param]);})
 		.attr("stroke",function(d){return colorScale(d.week);})
 		.attr("stroke-width",1)
 	;
@@ -345,7 +359,7 @@ function makeGraph(customList){
 		.attr("class","pointCircle")
 		.attr("r",4)
 		.attr("cx",function(d){return dayOfWeekScale(d.dayOfWeek);})
-		.attr("cy",function(d){return valueScale(getGraphValue(d));})
+		.attr("cy",function(d){return valueScale(d[param]);})
 		.attr("fill",function(d){return colorScale(d.week);})
 		.on(clickEventName,onClickObj)
 		.attr("stroke",function(d){
@@ -365,7 +379,7 @@ function makeGraph(customList){
 			}
 		})
 		.style("visibility",function(d){
-			if(getGraphValue(d)==null){
+			if(d[param]==null){
 				return "hidden";
 			}
 			return "visible";
@@ -386,7 +400,7 @@ function makeGraph(customList){
 		.attr("class","selectCircle")
 		.attr("r",20)
 		.attr("cx",function(d){return dayOfWeekScale(d.dayOfWeek);})
-		.attr("cy",function(d){return valueScale(getGraphValue(d));})
+		.attr("cy",function(d){return valueScale(d[param]);})
 		.attr("fill","white")
 		.style("opacity",0.001)
 		.on(clickEventName,onClickObj)
@@ -398,14 +412,15 @@ function makeDescription(){
 	var str = "このページでは以下の読み替えをしています。";
 	for(var key in TRANS_MAP){
 		var value = TRANS_MAP[key];
-		str += "<br>"+value+"→"+key;
+		str += "<br>"+key+"→"+value;
 	}
 	target.html(str);
 }
 function refreshView(){
 	d3.select("#dataDiv").html(dumpList());
 	makeCalenderTable();
-	makeGraph();
+	makeGraph(null,"graphDiv","陽性");
+	makeGraph(null,"graphPcrDiv","PCR");
 }
 function onLoadFunction(){
 	var objList = getObjListFromCsvUrl(SUMMARY_CSV_URL);
