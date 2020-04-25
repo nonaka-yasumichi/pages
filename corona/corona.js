@@ -87,7 +87,11 @@ function customizeObj(prevObj,obj){
 		if(prevObj!=null){
 			prevValue = prevObj[key];
 		}
-		ret[TRANS_MAP[key]] = value - prevValue;
+		var newKey = TRANS_MAP[key];
+		if(newKey==null){
+			newKey = key;
+		}
+		ret[newKey] = value - prevValue;
 	}
 	ret.URL = obj.URL;
 	return ret;
