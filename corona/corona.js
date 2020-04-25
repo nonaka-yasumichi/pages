@@ -5,10 +5,12 @@ var TRANS_MAP = {
 	"PCR検査陽性者":"陽性",
 	"PCR検査実施人数":"PCR",
 	"有症状者":"有症",
+	"無症状者":"無症",
+	"症状有無確認中":"確認",
 	"退院した者":"退院",
 	"人工呼吸器又は集中治療室に入院している者":"重症",
 	"死亡者":"死者",
-	"死亡者（都道府県ベース）":"都道府県ベース",
+	"死亡者（都道府県の公表ベース）":"都道府県ベース",
 };
 var 曜日リスト = ["日","月","火","水","木","金","土"];
 var savedCustomList = null;
@@ -18,7 +20,7 @@ var clickEventName = window.ontouchstart===null?"touchstart":"click";
 
 function getCsvStr(url){
 	var xhr = new XMLHttpRequest();
-	xhr.open("get",CORS_URL+url,false);
+	xhr.open("get",CORS_URL+url,true);
 	xhr.send(null);
 	return xhr.response;
 }
@@ -34,6 +36,9 @@ function getValue(str){
 }
 function getObjListFromCsvUrl(csvUrl){
 	var csvStr = ""+getCsvStr(csvUrl);
+	return getObjListFromCsvStr(csvStr);
+}
+function getObjListFromCsvStr(csvStr){
 	csvStr = csvStr.replace(/\r/g,"");
 	var csvLines = csvStr.split("\n");
 	
@@ -84,6 +89,7 @@ function customizeObj(prevObj,obj){
 		}
 		ret[TRANS_MAP[key]] = value - prevValue;
 	}
+	ret.URL = obj.URL;
 	return ret;
 }
 function makeDummyObj(format,date){
@@ -416,16 +422,54 @@ function makeDescription(){
 	}
 	target.html(str);
 }
+function makeUrlDiv(){
+	var list = savedCustomList;
+	var target = d3.select("#urlDiv");
+	var str = "";
+	for(var i=0;i<list.length;i++){
+		var obj = list[i];
+		if(!obj.selected){
+			continue;
+		}
+		str+="<a target='_blank' href='"+obj.URL+"'>"+obj.URL+"</a>";
+//		str+=obj.URL;
+	}
+	target.html(str);
+}
 function refreshView(){
 	d3.select("#dataDiv").html(dumpList());
 	makeCalenderTable();
 	makeGraph(null,"graphDiv","陽性");
 	makeGraph(null,"graphPcrDiv","PCR");
+	makeUrlDiv();
 }
-function onLoadFunction(){
-	var objList = getObjListFromCsvUrl(SUMMARY_CSV_URL);
+function onReceiveFunction(csvStr){
+	var objList = getObjListFromCsvStr(csvStr);
 	customList = customizeList(objList);
 	savedCustomList = customList;
 	refreshView();
+	d3.select("#bodyDiv").style("visibility","visible");
+	d3.select("#readingDiv").style("visibility","hidden");
+}
+function onLoadFunction(){
 	makeDescription();
+	var xhr = new XMLHttpRequest();
+	xhr.open("GET", CORS_URL+SUMMARY_CSV_URL, true);
+	xhr.onload = function (e) {
+		if (xhr.readyState === 4) {
+			if (xhr.status === 200) {
+				onReceiveFunction(xhr.responseText);
+//				console.log(xhr.responseText);
+			} else {
+				console.error(xhr.statusText);
+				d3.select("#readingDiv").html(xhr.statusText);
+			}
+		}
+	};
+	xhr.onerror = function (e) {
+		console.error(xhr.statusText);
+		d3.select("#readingDiv").html(xhr.statusText);
+	};
+	xhr.send(null); 
+
 }
