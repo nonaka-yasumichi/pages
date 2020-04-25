@@ -439,7 +439,7 @@ function makeUrlDiv(){
 function refreshView(){
 	d3.select("#dataDiv").html(dumpList());
 	makeCalenderTable();
-	makeGraph(null,"graphDiv","陽性");
+	makeGraph(null,"graphCaseDiv","陽性");
 	makeGraph(null,"graphPcrDiv","PCR");
 	makeUrlDiv();
 }
