@@ -417,6 +417,146 @@ function makeGraph(customList,id,param){
 		;
 
 }
+function makeStackSeriesList(seriesList,param){
+	var ret = [];
+	for(var i=0;i<seriesList.length;i++){
+		var obj = {};
+		var list = seriesList[i];
+		obj.list = list;
+		obj.week = obj.list[0].week;
+		var max = 0;
+		for(var j=0;j<list.length;j++){
+			var subObj = list[j];
+			var value = subObj[param];
+			if(value==null){
+				value = 0;
+			}
+			subObj.lower = max;
+			max += value;
+			subObj.upper = max;
+		}
+		obj[param] = max;
+		ret.push(obj);
+	}
+	return ret;
+}
+function makeStackGraph(customList,id,param){
+	if(customList==null){
+		customList = savedCustomList;
+	}
+
+	var maxWeek = d3.max(customList,function(d){return d.week;});
+	var weekColorScale = d3.scaleSequential(d3.interpolateRainbow).domain([0, 7]);
+
+	var seriesList = makeSeriesList(customList);
+	var stackSeriesList = makeStackSeriesList(seriesList,param);
+	var maxValue = d3.max(stackSeriesList,function(d){return d[param];});
+	var minValue = 0;
+	var target = d3.select("#"+id);
+	target.selectAll(".svg").data([]).exit().remove();
+	var svg = target.selectAll(".svg").data([1]).enter()
+		.append("svg")
+		.attr("class","svg")
+		.style("overflow","visible")
+		.attr("width","650")
+		.attr("height","300")
+	;
+	var borderG = svg.append("g").attr("id","borderG");
+	var lineG = svg.append("g").attr("id","lineG");
+	var pointG = svg.append("g").attr("id","pointG");
+	var left = 80;
+	var right = 590;
+	var weekScale = d3.scaleLinear()
+		.domain([0,maxWeek])
+		.range([left+30,right-30])
+	;
+	var valueScale = d3.scaleLinear()
+		.domain([minValue,maxValue])
+		.range([250,30])
+	;
+	var borders = [
+		[left,0,left,250],
+		[left,250,right,250],
+		[right,0,right,250],
+	];
+	if(minValue!=0){
+		borders.push([left,valueScale(0),right,valueScale(0)]);
+	}
+	
+	for(var i=0;i<borders.length;i++){
+		var b = borders[i];
+		borderG.append("line")
+			.attr("x1",b[0])
+			.attr("y1",b[1])
+			.attr("x2",b[2])
+			.attr("y2",b[3])
+			.attr("stroke","white")
+			.attr("stroke-width",1)
+		;
+	}
+	borderG.selectAll(".weekText").data(stackSeriesList).enter()
+		.append("text")
+		.attr("x",function(d,i){var obj = stackSeriesList[i];return weekScale(obj.week);})
+		.attr("y",function(d,i){return 280;})
+		.attr("fill","white")
+		.attr("font-size",20)
+		.attr("text-anchor","middle")
+		.text(function(d,i){var obj = stackSeriesList[i];return obj.week;})
+	;
+	borderG
+		.append("text")
+		.attr("class",".numLabel")
+		.attr("x",left-2)
+		.attr("y",30)
+		.attr("font-size",20)
+		.attr("fill","white")
+		.attr("text-anchor","end")
+		.text(maxValue)
+	;
+	borderG
+		.append("text")
+		.attr("class",".numLabel")
+		.attr("x",left-2)
+		.attr("y",valueScale(0))
+		.attr("font-size",20)
+		.attr("fill","white")
+		.attr("text-anchor","end")
+		.text(0)
+	;
+
+	var pointRect = pointG.selectAll(".pointRect").data(customList).enter()
+		.append("rect")
+		.attr("class","pointRect")
+		.attr("x",function(d){return weekScale(d.week-0.4);})
+		.attr("width",function(d){return weekScale(d.week+0.4)-weekScale(d.week-0.4);})
+		.attr("y",function(d){return valueScale(d.upper);})
+		.attr("height",function(d){return valueScale(d.lower)-valueScale(d.upper);})
+		.attr("fill",function(d){return weekColorScale(d.dayOfWeek);})
+		.on(clickEventName,onClickObj)
+		.attr("stroke",function(d){
+			if(d.selected){
+				return "yellow";
+			}
+			else{
+				return "none";
+			}
+		})
+		.attr("stroke-width",function(d){
+			if(d.selected){
+				return 4;
+			}
+			else{
+				return 0;
+			}
+		})
+		.style("visibility",function(d){
+			if(d[param]==null){
+				return "hidden";
+			}
+			return "visible";
+		})
+	;
+}
 function makeDescription(){
 //	var target = d3.select("#descSpan");
 //	var str = "このページでは以下の読み替えをしています。";
@@ -444,6 +584,8 @@ function refreshView(){
 	d3.select("#dataDiv").html(dumpList());
 	makeGraph(null,"graphCaseDiv","陽性");
 	makeGraph(null,"graphPcrDiv","PCR");
+	makeStackGraph(null,"graphStackCaseDiv","陽性");
+	makeStackGraph(null,"graphStackPcrDiv","PCR");
 	makeCalenderTable();
 	makeUrlDiv();
 }
@@ -459,7 +601,7 @@ function onLoadFunction(){
 	makeDescription();
 	var xhr = new XMLHttpRequest();
 	var url = CORS_URL+SUMMARY_CSV_URL;
-//	url = "summary.csv";
+	url = "summary.csv";
 	xhr.open("GET", url, true);
 	xhr.onload = function (e) {
 		if (xhr.readyState === 4) {
