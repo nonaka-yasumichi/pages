@@ -601,7 +601,7 @@ function onLoadFunction(){
 	makeDescription();
 	var xhr = new XMLHttpRequest();
 	var url = CORS_URL+SUMMARY_CSV_URL;
-	url = "summary.csv";
+//	url = "summary.csv";
 	xhr.open("GET", url, true);
 	xhr.onload = function (e) {
 		if (xhr.readyState === 4) {
