@@ -431,9 +431,9 @@ function makeStackSeriesList(seriesList,param){
 			if(value==null){
 				value = 0;
 			}
-			subObj.lower = max;
+			subObj["lower"+param] = max;
 			max += value;
-			subObj.upper = max;
+			subObj["upper"+param] = max;
 		}
 		obj[param] = max;
 		ret.push(obj);
@@ -529,8 +529,8 @@ function makeStackGraph(customList,id,param){
 		.attr("class","pointRect")
 		.attr("x",function(d){return weekScale(d.week-0.4);})
 		.attr("width",function(d){return weekScale(d.week+0.4)-weekScale(d.week-0.4);})
-		.attr("y",function(d){return valueScale(d.upper);})
-		.attr("height",function(d){return valueScale(d.lower)-valueScale(d.upper);})
+		.attr("y",function(d){return valueScale(d["upper"+param]);})
+		.attr("height",function(d){return valueScale(d["lower"+param])-valueScale(d["upper"+param]);})
 		.attr("fill",function(d){return weekColorScale(d.dayOfWeek);})
 		.on(clickEventName,onClickObj)
 		.attr("stroke",function(d){
