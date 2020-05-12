@@ -2,15 +2,15 @@
 var CORS_URL="https://cors-anywhere.herokuapp.com/";
 var SUMMARY_CSV_URL= "https://github.com/kaz-ogiwara/covid19/raw/master/data/summary.csv";
 var TRANS_MAP = {
-	"PCR検査陽性者":"陽性",
-	"PCR検査実施人数":"PCR",
-	"有症状者":"有症",
-	"無症状者":"無症",
-	"症状有無確認中":"確認",
-	"退院した者":"退院",
-	"人工呼吸器又は集中治療室に入院している者":"重症",
-	"死亡者":"死者",
-	"死亡者（都道府県の公表ベース）":"都道府県ベース",
+	"pcr_tested_positive":"陽性",
+	"pcr_tested":"PCR",
+//	"有症状者":"有症",
+//	"無症状者":"無症",
+//	"症状有無確認中":"確認",
+//	"退院した者":"退院",
+//	"人工呼吸器又は集中治療室に入院している者":"重症",
+//	"死亡者":"死者",
+//	"死亡者（都道府県の公表ベース）":"都道府県ベース",
 };
 var 曜日リスト = ["日","月","火","水","木","金","土"];
 var savedCustomList = null;
@@ -69,17 +69,17 @@ function getTwoDigit(num){
 function customizeObj(prevObj,obj){
 	var ret = {};
 	/* 月日変換 */
-	var dateFormatStr = obj.年 + "-" + getTwoDigit(obj.月) + "-"+getTwoDigit(obj.日)
+	var dateFormatStr = obj.year + "-" + getTwoDigit(obj.month) + "-"+getTwoDigit(obj.date)
 		+ "T00:00:00+09:00";
 	var date = new Date(dateFormatStr);
 	ret.dateFormatStr = dateFormatStr;
 	ret.date = date;
 	ret.dayOfWeek = date.getDay();
-	ret.月日 = obj.月 + "/" + obj.日;
+	ret.月日 = obj.month + "/" + obj.date;
 	ret.曜日 = 曜日リスト[ret.dayOfWeek];
 	/* 累計→当日変換 */
 	for(var key in obj){
-		if(key.indexOf("数")==-1 && key.indexOf("者")==-1){
+		if(TRANS_MAP[key]==null){
 			continue;
 		}
 		var value = obj[key];
@@ -418,13 +418,13 @@ function makeGraph(customList,id,param){
 
 }
 function makeDescription(){
-	var target = d3.select("#descSpan");
-	var str = "このページでは以下の読み替えをしています。";
-	for(var key in TRANS_MAP){
-		var value = TRANS_MAP[key];
-		str += "<br>"+key+"→"+value;
-	}
-	target.html(str);
+//	var target = d3.select("#descSpan");
+//	var str = "このページでは以下の読み替えをしています。";
+//	for(var key in TRANS_MAP){
+//		var value = TRANS_MAP[key];
+//		str += "<br>"+key+"→"+value;
+//	}
+//	target.html(str);
 }
 function makeUrlDiv(){
 	var list = savedCustomList;
@@ -442,9 +442,9 @@ function makeUrlDiv(){
 }
 function refreshView(){
 	d3.select("#dataDiv").html(dumpList());
-	makeCalenderTable();
 	makeGraph(null,"graphCaseDiv","陽性");
 	makeGraph(null,"graphPcrDiv","PCR");
+	makeCalenderTable();
 	makeUrlDiv();
 }
 function onReceiveFunction(csvStr){
@@ -458,7 +458,9 @@ function onReceiveFunction(csvStr){
 function onLoadFunction(){
 	makeDescription();
 	var xhr = new XMLHttpRequest();
-	xhr.open("GET", CORS_URL+SUMMARY_CSV_URL, true);
+	var url = CORS_URL+SUMMARY_CSV_URL;
+//	url = "summary.csv";
+	xhr.open("GET", url, true);
 	xhr.onload = function (e) {
 		if (xhr.readyState === 4) {
 			if (xhr.status === 200) {
