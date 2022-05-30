@@ -1,0 +1,29 @@
+body{
+	background:wheat;
+	word-break:keep-all;
+}
+table{
+	border-collapse:collapse;
+	border-spacing:0;
+	empty-cells:show;
+}
+th{
+	border: black solid 1px;
+	border-spacing:0;
+}
+tr{
+	border: black solid 1px;
+	border-spacing:0;
+}
+td{
+	border: black solid 1px;
+	border-spacing:0;
+}
+button{
+	padding: 0px 10px 0px 10px;
+	margin: 0px;
+}
+/* ページ先頭の文字列 */
+.titleSpan{
+	font-size:24px;
+}
